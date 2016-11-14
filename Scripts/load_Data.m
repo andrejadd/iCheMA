@@ -3,7 +3,7 @@
 % load data
 %
     
-function[X, y, X_degrad, light_var] = load_Data(runid, response_node, ...
+function[Data] = load_Data(runid, response_node, ...
                                          biopepa_network, gradient, predictor_type)
 
         
@@ -104,6 +104,11 @@ function[X, y, X_degrad, light_var] = load_Data(runid, response_node, ...
     y = y(take_these_obs);
 
         
+    % Pack it together into one data structure.
+    Data.X = X;
+    Data.X_degrad = X_degrad;
+    Data.y = y;
+    Data.light_var = light_var;
 
 end
 

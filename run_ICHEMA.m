@@ -1,16 +1,12 @@
-% Copyright 2016, Marco Grzegorczyk and Andrej Aderhold
+% BSD 3-Clause License, see LICENSE file
+% Copyright (c) 2016, Marco Grzegorczyk and Andrej Aderhold
 %
 % Function run_ICHEMA()
 %
-% This is the Matlab implementation of iCheMA with adaptations to the Biopepa data
-% set. See the README.txt for more information.
+% This is the Matlab implementation of iCheMA with adaptation to the Biopepa data
+% set. See the README.md file for more information.
 %
-% Please cite the following paper when using this software:
-%
-%  Aderhold, A., Grzegorczyk, M., and Husmeier, D. (2016). Approximate
-%  Bayesian inference in semi-mechanistic models. Statistics and Computing, 1-38.
-%
-%
+
 
 function run_ICHEMA()
 
@@ -35,12 +31,37 @@ function run_ICHEMA()
     max_response_nodes = 7;  % Biopepa specific. 
     max_parent_set_ids = 64; % Given 7 response nodes, possible number of parent configurations.
     
+   
+    % Define the input data: This information is used in load_Data() to
+    % identify the predictor data (network, predictor type, data instance)
+    % and the response data (gradient, network, data instance)
+    %
+    % NOTE: Adapt these and the content of load_Data() for you own needs.
+    gradient = 'RBFGradient';  % the response type
+                               % 'RBFGRadient' : Analytic gradient
+                               % 'coarseGradient' : Numerical gradient
+    network = 'wildtype';      % identify the network
+    data_instance = 1;         % one of the five data instances
+    
+    % Create directories for the results.
+    if ~exist('Results')
+        mkdir('Results');
+    end
+    
+    results_dir = sprintf('Results/%s', gradient);
+    if ~exist(results_dir) 
+        mkdir(results_dir)
+    end
+   
+   
+    
     for response_node = 1:max_response_nodes
         
         for parent_set_id = 1:max_parent_set_ids
     
             % Run iCheMA, at the end of this function the results are saved
             % into the 'Results/' directory.
+            
             %
             % See the following parameter settings inside run_ICHEMA_core() that define the data to be read:
             %    gradient 
@@ -48,8 +69,13 @@ function run_ICHEMA()
             %    network
             %    data_instance  
             %
-            run_ICHEMA_core(response_node, parent_set_id, MCMC_iterations)
+            [results, parent_set, inhib_mat] = run_ICHEMA_core(response_node, gradient, network, data_instance, parent_set_id, MCMC_iterations);
         
+            % The results are written into here
+            fileout = sprintf('%s/OUT_r%i_psi%i_BIOPEPA-%s_run%i.mat', results_dir, response_node, parent_set_id, network, data_instance);
+            fprintf('\nattempting to write to %s\n', fileout);
+            save(fileout, 'results', 'parent_set', 'inhib_mat');   
+    
         end
         
     end
@@ -61,33 +87,21 @@ end
 %
 %
 %
-function[] = run_ICHEMA_core(response_node, parent_set_id, iterations)
+function[results, parent_set, inhib_mat] = run_ICHEMA_core(response_node, gradient, network, data_instance, parent_set_id, iterations)
 
     % All the script are in here:
     addpath('Scripts');
 
     rng('shuffle');
 
-    % Define the input data: This information is used in load_Data() to
-    % identify the predictor data (network, predictor type, data instance)
-    % and the response data (gradient, network, data instance)
-    %
-    % NOTE: Adapt these and the content of load_Data() for you own needs.
-    gradient = 'RBFGradient';  % the response type
-                               % 'RBFGRadient' : Analytic gradient
-                               % 'coarseGradient' : Numerical gradient
-    predictor_type = 'mRNA';   % identify the predictor type
-    network = 'wildtype';      % identify the network
-    data_instance = 1;         % one of the five data instances
-    
+    % Identify the predictor type. This is Biopepa specific.
+    predictor_type = 'mRNA';   
+        
     % Maximum number of child nodes, default setting
     % When changing this the parent set function also becomes affected, so
     % threat with care and adapt getParentSets() accordingly.
     max_fanin = 3;
-   
-    % The results are written into here
-    fileout = sprintf('Results/OUT_r%i_psi%i_BIOPEPA-%s_run%i.mat', response_node, parent_set_id, network, data_instance);
-
+    
     % This function loads the design matrix 'X', the response vector 'y'
     % (depends on variable 'response_node'), the degradation term
     % 'X_degrad', and the light indicator vector 'light_var'. The former vector
@@ -95,13 +109,7 @@ function[] = run_ICHEMA_core(response_node, parent_set_id, iterations)
     %
     % IMPORTANT: Adapt this function to your own requirements. This is an
     % example for the Biopepa data as it was used in the paper.
-    [X, y, X_degrad, light_var] = load_Data(data_instance, response_node, network, gradient, predictor_type);
-
-    % Pack it together into one data structure.
-    Data.X = X;
-    Data.X_degrad = X_degrad;
-    Data.y = y;
-    Data.light_var = light_var;
+    Data = load_Data(data_instance, response_node, network, gradient, predictor_type);
     
     % Number of nodes
     total_nodes = size(Data.X, 1);
@@ -154,9 +162,6 @@ function[] = run_ICHEMA_core(response_node, parent_set_id, iterations)
         end
     end
 
-    fprintf('\nattempting to write to %s\n', fileout);
-    save(fileout, 'results', 'parent_set', 'inhib_mat', 'parent_set_id', 'response_node', 'max_fanin');   
-    
 
 end
 

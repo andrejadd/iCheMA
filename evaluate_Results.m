@@ -148,25 +148,30 @@ function[edge_vec] = process_Results(network, dataid, gradient_type, results_dir
 
         response_max_val_logLL = -Inf;
         response_max_val_logLL_prior = -Inf;
-        % read file
-
+       
+        %
+        % Loop over the different parent set configurations and read out
+        % the marginal log likelihood (LL) for each one. Determine the highest
+        % LL of each parent set given its different activator/inhibitor
+        % setups. Ignore all other setups and use the highest one for
+        % further probability calculations involving the parents in the
+        % set.
+        %
         for parent_set_id = 1:length(parent_sets)
 
+            % Identify results file and load it
             filein = sprintf('%s/%s/OUT_r%i_psi%i_BIOPEPA-%s_run%i.mat', results_dir, gradient_type, response_node, parent_set_id, network, dataid);
-
-                % if ~exist(filein)
-                %     results_incomplete = 1;
-                %     break;
-                % end
-
             load(filein);
 
+            % Save the marginal log likelihood
             RESULTS{response_node}.scores{parent_set_id}.scores = results;
 
+            % Use this to identify the parent set with the highest log
+            % likelihood
             score_tmp = results;
 
+            % Just to be save, delete results.
             clear results;
-
 
             %
             % get max values for each parent_set
