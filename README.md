@@ -46,9 +46,13 @@ This folder contains the following content:
 
 1. execute run_Example_Biopepa.m
 
-This script runs iCheMA on several network and instances of the Biopepa data. The Biopepa data requires a couple of special preprocessing steps, which are implemented in load_Data(). This function takes a flag 'BIOPEPA_DATA', which can be set to zero in order to turn Biopepa specific processing off. Another important issue is the generation of different parent set configurations. The function getParentSets() builds the parent and activator/inhibitor combinations given a maximal fan-in. Furthermore, the number of available predictor variables influences the amount of parent sets, which has to be taken into account when modifying the code for new data (see getParentSets()).
+This script runs iCheMA on several networks and data instances of the Biopepa data. The Biopepa data requires a couple of special preprocessing steps, which are implemented in load_Data(). This function takes a flag 'BIOPEPA_DATA', which can be set to zero in order to turn Biopepa specific processing off. See the following paper for more information on the Biopepa model used here:
 
-Note: Running iCheMA on a single data set can take some time depending on the number of MCMC iterations, number of predictors, etc.. 
+Aderhold, A., Husmeier, D., & Grzegorczyk, M. (2014). Statistical inference of regulatory networks for circadian regulation. Statistical applications in genetics and molecular biology, 13(3), 227-273.
+
+Another important issue is the generation of different parent set configurations. The function getParentSets() builds the parent and activator/inhibitor combinations given a maximal fan-in. Furthermore, the number of available predictor variables influences the amount of parent sets, which has to be taken into account when modifying the code for new data (see getParentSets()).
+
+Note: Running iCheMA on a single data set can take some time depending on the number of MCMC iterations, number of predictors and parent set configurations. It can be run separately for each response and parent set, e.g. on a cluster. 
 
 2.  execute evalute_Results.m
 
