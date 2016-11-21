@@ -47,10 +47,7 @@ function run_Example_Biopepa()
     % Specify the response nodes for which to calculate the log likelihoods
     response_node_set = 1:7;  
     
-    % Given a max_fanin of 3 and 7 predictors, this is the number of
-    % possible parent sets
-    max_parent_set_ids = 64; 
-    
+   
    
     % Define the input data: This information is used in load_Data() to
     % identify the predictor data (network, predictor type, data instance)
@@ -79,25 +76,31 @@ function run_Example_Biopepa()
     % marginal log likelood independently for each setup.
     %
     for response_node = response_node_set
-        
+                            
+        % This function loads the design matrix 'X', the response vector 'y'
+        % (depends on variable 'response_node'), the degradation term
+        % 'X_degrad', and the light indicator vector 'light_var'. The former vector
+        % is specific to the data used here.
+        %
+        % IMPORTANT: Adapt this function to your own requirements. This is an
+        % example for the Biopepa data as it was used in the paper.
+        Data = load_Data(data_instance, response_node, network, gradient, BIOPEPA_DATA);
+
+        % Number of nodes
+        total_nodes = size(Data.X, 1);
+
+        % Take out response_node as parent, so this is a vector with putative parent nodes.
+        parent_nodes = setdiff(1:total_nodes, response_node);
+
+        % Given p predictors and (0,..,r) possible combinations of these predictors at a time (order does not matter), 
+        % calculate the total number of possible combinations. Here r := max_fanin and p := number of predictors/parents.
+        max_parent_set_ids = n_combinations(length(parent_nodes), max_fanin);
+
+        %
+        % Loop over each possible parent set
+        %
         for parent_set_id = 1:max_parent_set_ids
-                
             
-            % This function loads the design matrix 'X', the response vector 'y'
-            % (depends on variable 'response_node'), the degradation term
-            % 'X_degrad', and the light indicator vector 'light_var'. The former vector
-            % is specific to the data used here.
-            %
-            % IMPORTANT: Adapt this function to your own requirements. This is an
-            % example for the Biopepa data as it was used in the paper.
-            Data = load_Data(data_instance, response_node, network, gradient, BIOPEPA_DATA);
-
-            % Number of nodes
-            total_nodes = size(Data.X, 1);
-
-            % Take out response_node as parent, so this is a vector with putative parent nodes.
-            parent_nodes = setdiff(1:total_nodes, response_node);
-
             % Map the parent_set_id to a vector of parent nodes and a corresponding
             % matrix with activation/inhibition combinations. 
             %
